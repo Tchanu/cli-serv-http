@@ -15,18 +15,19 @@ class TCPServer():
         self.sock.listen(5)
         print("Initialisation termine")
 
-    def get_html(self,file_requested):#read html file.
+    def get_file(self,request):#read html file.
+        self.accepted_filetypes(request)
         try:
-            file_handler = open("static"+file_requested,'rb')
+            file_handler = open("static"+request,'rb')
             content = file_handler.read()
             file_handler.close()
-            self.print_http_status(file_requested,'200',self.client_addr[0],self.client_addr[1])
+            self.print_http_status(request,'200',self.client_addr[0],self.client_addr[1])
             return content
         except Exception as e:#404
-            return self.get_error(file_requested,"404")
+            return self.get_error(request,"404")
 
-    def get_error(self,file_requested,error):#return errors to client
-        self.print_http_status(file_requested,error,self.client_addr[0],self.client_addr[1])
+    def get_error(self,request,error):#return errors to client
+        self.print_http_status(request,error,self.client_addr[0],self.client_addr[1])
         file_handler = open("static/"+error+".html",'rb')
         content = file_handler.read()
         file_handler.close()
@@ -38,6 +39,14 @@ class TCPServer():
             color = '31'
         print ("\033[%sm%s(%s) ---------------> %s:%s\033[0m" % (color,request,status,client_ip,client_port))
 
+    def accepted_filetypes(self,file):
+        afps = ['html','jpg','gif']
+        filetype = file.split(".")[-1]
+        for(afp in afps):
+            if(afp == filetype)
+                return True
+        return False
+
     def is_valid_request(self,hostname):#checking request
         allowed = re.compile(r"/(?!-)[//,\.,a-z0-9-]{1,63}$", re.IGNORECASE)
         return allowed.match(hostname) != None
@@ -48,15 +57,18 @@ class TCPServer():
         method = data.split(' ')[0]
 
         if (method == 'GET'):#supported method
-            file_requested = data.split(' ')[1]
-            if (file_requested == '/'): #homepage
-                file_requested = '/index.html'
-            if(self.is_valid_request(file_requested)):
-                content = self.get_html(file_requested.split('?')[0])#everything ok
+            request = data.split(' ')[1]
+            if (request == '/'): #homepage
+                request = '/index.html'
+            if(self.is_valid_request(request)):
+                if(self.accepted_filetypes()):
+                    content = self.get_file(request.split('?')[0])#everything ok
+                else
+                    content = self.get_error(request,"415")#unsuported media
             else:
-                content = self.get_error(file_requested,"400")
+                content = self.get_error(request,"400")#invalid request
         else:
-            content = self.get_error(file_requested,"405")#unsupported method
+            content = self.get_error(request,"405")#unsupported method
 
         return content
 
