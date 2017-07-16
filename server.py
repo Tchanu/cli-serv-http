@@ -15,6 +15,7 @@ class TCPServer():
         self.sock.listen(5)
         print("Initialisation termine")
 
+
     def get_file(self,request):#read html file.
         self.accepted_filetypes(request)
         try:
@@ -26,6 +27,7 @@ class TCPServer():
         except Exception as e:#404
             return self.get_error(request,"404")
 
+
     def get_error(self,request,error):#return errors to client
         self.print_http_status(request,error,self.client_addr[0],self.client_addr[1])
         file_handler = open("static/"+error+".html",'rb')
@@ -33,44 +35,58 @@ class TCPServer():
         file_handler.close()
         return content
 
+
     def print_http_status(self,request,status,client_ip,client_port):
         color = '32'
         if(status != '200'):
             color = '31'
         print ("\033[%sm%s(%s) ---------------> %s:%s\033[0m" % (color,request,status,client_ip,client_port))
 
+
     def accepted_filetypes(self,file):
         afps = ['html','jpg','gif']
         filetype = file.split(".")[-1]
-        for(afp in afps):
-            if(afp == filetype)
+        for afp in afps:
+            if(afp == filetype):
                 return True
         return False
+
+
+    def accepted_methods(self,method):
+        return method == "GET"#only GET is supported right now
+
+
+    def accepted_http_version(self,version):
+        return version == "HTTP/1.1"#only 1.1 is supported right now
+
 
     def is_valid_request(self,hostname):#checking request
         allowed = re.compile(r"/(?!-)[//,\.,a-z0-9-]{1,63}$", re.IGNORECASE)
         return allowed.match(hostname) != None
 
+
     def http_req(self):#process http request
-        data = self.conn.recv(1024)
-        data = bytes.decode(data)
+        data = bytes.decode(self.conn.recv(1024))
         method = data.split(' ')[0]
+        request = data.split(' ')[1]
 
-        if (method == 'GET'):#supported method
-            request = data.split(' ')[1]
-            if (request == '/'): #homepage
-                request = '/index.html'
-            if(self.is_valid_request(request)):
-                if(self.accepted_filetypes()):
-                    content = self.get_file(request.split('?')[0])#everything ok
-                else
-                    content = self.get_error(request,"415")#unsuported media
-            else:
-                content = self.get_error(request,"400")#invalid request
-        else:
-            content = self.get_error(request,"405")#unsupported method
+        if (request == '/'):#homepage
+            request = '/index.html'
 
-        return content
+        if (accepted_http_version(data.split(' ')[2] == False):#HTTP Version Not Supported
+            return self.get_error(request,"505")
+
+        if(accepted_methods(method) == False):#unsupported method
+            return self.get_error(request,"405")
+
+        if(self.is_valid_request(request) == False):#invalid request
+            return self.get_error(request,"400")
+
+        if(self.accepted_filetypes(request) == False):#unsuported media
+            return self.get_error(request,"415")
+
+        return self.get_file(request.split('?')[0])#everything ok
+
 
     def run(self):
         while True:
@@ -92,6 +108,7 @@ class TCPServer():
                     exit()
             else:
                 self.conn.close()
+
 
 if __name__ =='__main__':
     tcps=TCPServer('localhost',3000)
