@@ -4,7 +4,6 @@ import socket
 import re
 from os import fork
 
-
 class TCPServer():
     def __init__(self,interface,port):
         self.sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -39,12 +38,16 @@ class TCPServer():
         data = bytes.decode(data)
         method = data.split(' ')[0]
 
-        if (method == 'GET') | (method == 'HEAD') | (method == 'PUT'):#supported methods
+        if (method == 'GET'):#supported method
             file_requested = data.split(' ')[1]
+
+            if (file_requested == '/'): #homepage
+                file_requested = '/index.html'
+
             if(self.is_valid_request(file_requested)):
                 content = self.get_html(file_requested.split('?')[0])#everything ok
             else:
-                content = self.get_html("/400.html")            
+                content = self.get_html("/400.html")
 
         else:
             content = self.get_html("/405.html")
