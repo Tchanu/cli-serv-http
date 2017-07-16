@@ -15,42 +15,49 @@ class TCPServer():
         self.sock.listen(5)
         print("Initialisation termine")
 
-
-    def get_html(self,file_requested):
+    def get_html(self,file_requested):#read html file.
         try:
             file_handler = open("static"+file_requested,'rb')
             content = file_handler.read()
             file_handler.close()
-            print ("\033[32m%s ---------------> %s:%s\033[0m" % (file_requested,self.client_addr[0],self.client_addr[1]))
+            self.print_http_status(file_requested,'200',self.client_addr[0],self.client_addr[1])
             return content
         except Exception as e:#404
-            print ("\033[31m%s(404) ---------------> %s:%s\033[0m" % (file_requested,self.client_addr[0],self.client_addr[1]))
-            file_handler = open("static/404.html",'rb')
-            content = file_handler.read()
-            file_handler.close()
-            return content
-    def is_valid_request(self,hostname):
+            return self.get_error(file_requested,"404")
+
+    def get_error(self,file_requested,error):#return errors to client
+        self.print_http_status(file_requested,error,self.client_addr[0],self.client_addr[1])
+        file_handler = open("static/"+error+".html",'rb')
+        content = file_handler.read()
+        file_handler.close()
+        return content
+
+    def print_http_status(self,request,status,client_ip,client_port):
+        color = '32'
+        if(status != '200'):
+            color = '31'
+        print ("\033[%sm%s(%s) ---------------> %s:%s\033[0m" % (color,request,status,client_ip,client_port))
+
+    def is_valid_request(self,hostname):#checking request
         allowed = re.compile(r"/(?!-)[//,\.,a-z0-9-]{1,63}$", re.IGNORECASE)
         return allowed.match(hostname) != None
 
-    def http_req(self):
+    def http_req(self):#process http request
         data = self.conn.recv(1024)
         data = bytes.decode(data)
         method = data.split(' ')[0]
 
         if (method == 'GET'):#supported method
             file_requested = data.split(' ')[1]
-
             if (file_requested == '/'): #homepage
                 file_requested = '/index.html'
-
             if(self.is_valid_request(file_requested)):
                 content = self.get_html(file_requested.split('?')[0])#everything ok
             else:
-                content = self.get_html("/400.html")
-
+                content = self.get_error(file_requested,"400")
         else:
-            content = self.get_html("/405.html")
+            content = self.get_error(file_requested,"405")#unsupported method
+
         return content
 
     def run(self):
