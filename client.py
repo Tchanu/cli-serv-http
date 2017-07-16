@@ -2,25 +2,31 @@
 #!/usr/bin/python
 import socket
 
-def show_data(data,title): #function qui affiche les donnes recues
-    print("\033[95m--------------------------%s----------------------\033[0m" % (req))
-    print(data)
-    print("\033[95m-------------------------------------------------------\033[0m" )
+class TCPClient():
+    def __init__(self,interface,port):
+        self.server_address=(interface, port)
+        self.sock=socket.socket(socket.AF_INET, socket. SOCK_STREAM)
+        self.sock.connect(self.server_address)
 
-def get_data(conn):  #recevoir des donnes depuis le serveur
-    data=conn.recv(8192)
-    return data.decode("utf-8")    
+    def show_data(self,data,title): #function qui affiche les donnes recues
+        print("\033[95m--------------------------%s----------------------\033[0m" % (title))
+        print(data)
+        print("\033[95m-------------------------------------------------------\033[0m" )
 
-server_address=('localhost', 3000)
+    def get_data(self,conn):  #recevoir des donnes depuis le serveur
+        data=conn.recv(8192)
+        return data.decode("utf-8")
 
-sock=socket.socket(socket.AF_INET, socket. SOCK_STREAM)
-sock.connect(server_address)
+    def run(self):
+        try:
+            while True:
+                req=raw_input("http://localhost:3000/").encode('utf-8')
+                self.sock.sendall(u'GET /'+req+' HTTP/1.1\r')
+                res=self.get_data(self.sock)
+                self.show_data(res,req)
+        finally:
+            self.sock.close()
 
-try:
-    while True:        
-        req=raw_input("http://localhost:3000/").encode('utf-8')     
-        rv=sock.sendall(u'GET /'+req+' HTTP/1.1\r')
-        res=get_data(sock)
-        show_data(res,req)        
-finally:
-    sock.close()
+if __name__ =='__main__':
+    tcps=TCPClient('localhost',3000)
+    tcps.run()
