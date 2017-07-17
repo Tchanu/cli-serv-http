@@ -57,7 +57,6 @@ class TCPServer():
 
 
     def accepted_http_version(self,version):
-        return version == "HTTP/1.1"#only 1.1 is supported right now
 
 
     def is_valid_request(self,hostname):#checking request
@@ -73,10 +72,10 @@ class TCPServer():
         if (request == '/'):#homepage
             request = '/index.html'
 
-        if (accepted_http_version(data.split(' ')[2] == False):#HTTP Version Not Supported
+        if (self.accepted_http_version(data.split(' ')[2]) == False):#HTTP Version Not Supported
             return self.get_error(request,"505")
 
-        if(accepted_methods(method) == False):#unsupported method
+        if(self.accepted_methods(method) == False):#unsupported method
             return self.get_error(request,"405")
 
         if(self.is_valid_request(request) == False):#invalid request
