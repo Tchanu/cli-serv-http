@@ -8,7 +8,7 @@ Program doesn't include installation.
 
 ### Prerequisites
 
-You need python 3.5.x to run this application.
+You need python 2.7.x to run this application.
 
 ## Screenshots
 ![alt text](screen1.png)
