@@ -57,6 +57,7 @@ class TCPServer():
 
 
     def accepted_http_version(self,version):
+        return len(version.split("HTTP/1.1")) > 0#only 1.1 is supported right now
 
 
     def is_valid_request(self,hostname):#checking request
