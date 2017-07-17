@@ -11,4 +11,7 @@ Program doesn't include installation.
 You need python 2.7.x to run this application.
 
 ## Screenshots
-![alt text](screen1.png)
+#### Client
+![alt text](Capture1.png)
+#### Server
+![alt text](Capture2.png)
